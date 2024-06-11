@@ -3,9 +3,12 @@ import axios from "axios";
 import { MagnifyingGlass } from "react-loader-spinner";
 import Alert from "./Alert";
 import Select from 'react-select';
+import MapComponent from "./MapComponent";
+import { AwesomeButton } from "react-awesome-button";
+import 'react-awesome-button/dist/styles.css';
+
 
 function App() {
-  
   const API_KEY = '21571e236ae1e7500c50aabca16ad13c';
 
   const [data, setData] = useState('');
@@ -14,8 +17,7 @@ function App() {
   const [symbol, setSymbol] = useState('°C');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // for handle unit changes
+  const [userLocation, setUserLocation] = useState(null);
   const handleUnitChange = (selectedOption) => {
     setUnit(selectedOption.value);
     setSymbol(selectedOption.value === 'metric' ? '°C' : '°F');
@@ -49,11 +51,35 @@ function App() {
     }
   };
 
+  const getUserLocation = () => {
+
+    if (userLocation) {
+      setUserLocation(null);
+      return;
+    }
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          setError(null);
+        },
+        (err) => {
+          setError(err.message);
+        }
+      );
+    } else {
+      setError('Geolocation is not supported by this browser.');
+    }
+  };
+
   return (
     <div className="app">
       {isLoading && (
         <div className="loading-spinner">
-          <MagnifyingGlass visible={true} height={80} width={80} 
+          <MagnifyingGlass visible={true} height={80} width={80}
             ariaLabel="MagnifyingGlass-loading"
             glassColor="#bbc1c3"
             color="#394c54"
@@ -95,7 +121,7 @@ function App() {
             </div>
 
             <div className="description">
-              <h2>{data.weather[0].main}</h2> :
+              <h2>{data.weather[0].main}</h2>
             </div>
           </div>
           <div className="bottom">
@@ -117,9 +143,8 @@ function App() {
             </div>
           </div>
         </div>
-      : null}
+        : null}
 
-      {/* for change unit  function*/}
       <div className="unit-dropdown">
         <Select
           options={unitOptions}
@@ -136,7 +161,7 @@ function App() {
             }),
             option: (provided, state) => ({
               ...provided,
-              backgroundColor:"white",
+              backgroundColor: "white",
               color: "black",
             }), singleValue: (provided) => ({
               ...provided,
@@ -145,8 +170,17 @@ function App() {
           }}
         />
       </div>
+
+      <div style={{ position: 'fixed', top: '1rem', right: '1rem' }}>
+        <AwesomeButton style={{ marginBottom: '1rem' }} type="primary" onPress={getUserLocation}>
+          {userLocation ? 'Close Map' : 'Open Map'}
+        </AwesomeButton>
+        {userLocation && (
+          <MapComponent lat={userLocation.latitude} lng={userLocation.longitude} />
+        )}
+      </div>
       <footer className="footer">
-        <h4>&copy; {new Date().getFullYear()} . All rights reserved.</h4>
+        <h4>&copy; {new Date().getFullYear()} Weather app. All rights reserved.</h4>
       </footer>
     </div>
   );
