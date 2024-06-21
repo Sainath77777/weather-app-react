@@ -31,26 +31,29 @@ function App() {
 
   // NOTE : Fatch data from OpenWeatherMap third party API.Constrected request url with (location, api key,unit).
   // NOTE : For more about Api EndPoint and Methods see documentation (https://openweathermap.org/api)
-  
+
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${API_KEY}&units=${unit}`;
 
+  const handleSearch = () => {
+    setIsLoading(true);
+    axios.get(url).then(response => {
+      setData(response?.data);
+    })
+      .catch((error) => {
+        setError(error.response?.data?.message || 'An error occurred');
+        setData(null);
+      })
+      .finally(() => {
+        setIsLoading(false);
+        setLocation('');
+        setTimeout(() => {
+          setError(null);
+        }, 3000);
+      });
+  }
   const searchLocation = (event) => {
     if (event.key === 'Enter') {
-      setIsLoading(true);
-      axios.get(url).then(response => {
-        setData(response?.data);
-      })
-        .catch((error) => {
-          setError(error.response?.data?.message || 'An error occurred');
-          setData(null);
-        })
-        .finally(() => {
-          setIsLoading(false);
-          setLocation('');
-          setTimeout(() => {
-            setError(null);
-          }, 3000);
-        });
+      handleSearch();
     }
   };
 
@@ -104,6 +107,9 @@ function App() {
           placeholder="Search Location"
           type="text"
         />
+        <AwesomeButton style={{ marginLeft: '1rem' }} type="danger" onPress={() => handleSearch()}>
+          {'Search'}
+        </AwesomeButton>
       </div>
 
       <div className="date">
